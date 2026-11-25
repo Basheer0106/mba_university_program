@@ -5,7 +5,7 @@ No build step, no `npm`, no framework. Open `index.html` in a browser, or upload
 ```
 index.html          the page (hero, universities, highlights, ribbon, #apply, trust strip, footer)
 css/styles.css      all styles
-js/config.js        site settings  → put your Google Sheet web-app URL in `sheetUrl` (left blank in this repo)
+js/config.js        site settings  → put your Google Sheet web-app URL in `sheetUrl`
 js/data.js          all comparison / fee / link content  → edit text and numbers here
 js/icons.js         inline SVG icons
 js/app.js           behaviour: scroll effects, the 3-step form, validation, saving to the sheet
