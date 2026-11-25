@@ -22,5 +22,5 @@ detect network failures, not whether Google wrote the row – check the sheet / 
 ## Things to know
 - If `sheetUrl` is empty the form shows "Spreadsheet is not connected yet" instead of a false success.
 - Anyone can read `js/config.js` (it is public on any static host) – that is normal for an Apps Script web-app URL.
-- The brochure PDFs are not included – see `prospectus/README.md`.
+- `prospectus/` holds ~86 MB of PDFs (Amrita 50 MB, Amity 34 MB). Compress them if page-load size matters.
 - The footer links and social icons are placeholders (`href="#"`).
