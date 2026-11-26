@@ -202,6 +202,7 @@
       '<form class="apply-body s1" id="form1" novalidate>' + sidePanel +
       '<div class="apply-main"><div class="step">' +
         '<h2 class="page-title">Tell us about yourself</h2>' +
+        (resumeTo ? '<p class="callout">Almost there &mdash; please fill in your details to continue to the admission step.</p>' : '') +
         '<p class="muted">Let&rsquo;s get started with some basic details.</p>' +
         '<div class="grid2">' +
           field({ id: 'fullName', label: 'Full Name', required: true, icon: 'user', control: textInput('fullName', 'autocomplete="name" placeholder="Enter your full name"') }) +
@@ -435,14 +436,17 @@
 
   var host = document.getElementById('apply');
   var step = 1; // 1 | 2 | 3 | 'done'
+  var resumeTo = null; // set when the visitor opened the comparison first: after step 1, continue to this step
 
   function stepperHtml() {
     return '<ol class="steps" aria-label="Form progress">' + STEP_LABELS.map(function (label, i) {
       var n = i + 1;
-      var state = step === n ? 'active' : step > n ? 'done' : '';
-      var inner = '<span class="dot">' + (step > n ? I.check : n) + '</span><span class="slabel">' + label + '</span>';
+      var before = typeof step === 'number' && step > n;                      // a step we have already passed
+      var ticked = before && !(n === 1 && Object.keys(validateBasic(data)).length); // ...and really finished
+      var state = step === n ? 'active' : ticked ? 'done' : '';
+      var inner = '<span class="dot">' + (ticked ? I.check : n) + '</span><span class="slabel">' + label + '</span>';
       return '<li class="' + state + '"' + (step === n ? ' aria-current="step"' : '') + '>' +
-        (step > n ? '<button type="button" class="step-link" data-go="' + n + '">' + inner + '</button>' : '<span class="step-link">' + inner + '</span>') + '</li>';
+        (before ? '<button type="button" class="step-link" data-go="' + n + '">' + inner + '</button>' : '<span class="step-link">' + inner + '</span>') + '</li>';
     }).join('') + '</ol>';
   }
 
@@ -505,7 +509,11 @@
       if (which === 1) {
         var e1 = validateBasic(data);
         showErrors(form, e1);
-        if (Object.keys(e1).length === 0) go(2);
+        if (Object.keys(e1).length === 0) {
+          var next = resumeTo || 2;
+          resumeTo = null;
+          go(next);
+        }
         return;
       }
 
@@ -541,13 +549,31 @@
   /* Next / Back / stepper / "submit another" buttons */
   host.addEventListener('click', function (ev) {
     var g = ev.target.closest('[data-go]');
-    if (g) { go(Number(g.getAttribute('data-go'))); return; }
+    if (g) {
+      var target = Number(g.getAttribute('data-go'));
+      if (step === 2 && target === 3 && Object.keys(validateBasic(data)).length) {
+        resumeTo = 3; // came here straight from the hero button – ask for the basic details first
+        go(1);
+        return;
+      }
+      go(target);
+      return;
+    }
     if (ev.target.closest('[data-action="reset"]')) {
       resetData();
       step = 1;
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  });
+
+  /* the hero's "Compare MBA Courses" button opens the comparison (step 2) straight away */
+  document.addEventListener('click', function (ev) {
+    var o = ev.target.closest('[data-open-step]');
+    if (!o) return;
+    ev.preventDefault();
+    if (step === 'done') resetData(); // don't let a finished application be re-sent from the comparison
+    go(Number(o.getAttribute('data-open-step')));
   });
 
   /* ================================================================== start */
