@@ -430,9 +430,8 @@
       submittedAt: new Date().toISOString(),
       fullName: d.fullName.trim(), email: d.email.trim(), phone: '+91 ' + d.phone,
       status: d.status,
-      /* "University (Course)" goes into the existing "Interested universities" column, so it is saved even
-         before the Apps Script has a separate Course column; `course` is also sent on its own. */
-      universities: (function () { var u = byId(D.universities, d.university); return (u ? u.name : d.university) + (d.course ? ' (' + d.course + ')' : ''); })(),
+      /* the university's name only; the course goes in its own "Course" column */
+      universities: (function () { var u = byId(D.universities, d.university); return u ? u.name : d.university; })(),
       course: d.course,
       qualification: d.qualification, percentage: d.percentage, passingYear: d.passingYear,
       experience: d.experience, intake: d.intake, payment: d.payment,
