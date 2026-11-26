@@ -11,16 +11,68 @@
   window.APP_DATA = {
     /* ---------- universities (form chips, links section) ---------- */
     universities: [
-      { id: 'vit', short: 'VIT', name: 'VIT University', logo: 'logos/vit.webp', prospectusUrl: 'prospectus/VIT-MBA-Brochure.pdf' },
-      { id: 'amrita', short: 'Amrita', name: 'Amrita Vishwa Vidyapeetham', logo: 'logos/amrita-white.svg', prospectusUrl: 'prospectus/Amrita-MBA-Brochure.pdf' },
-      { id: 'amity', short: 'Amity', name: 'Amity University Online', logo: 'logos/amity-color.svg', prospectusUrl: 'prospectus/Amity-MBA-Prospectus.pdf' },
-      { id: 'manipal', short: 'Manipal', name: 'Manipal Academy of Higher Education', logo: 'logos/manipal.png', prospectusUrl: 'https://onlinemanipal.mba/' }
+      { id: 'vit', short: 'VIT', name: 'VIT University', logo: 'logos/vit.webp', prospectusUrl: 'prospectus/VIT-MBA-Brochure.pdf',
+        courses: [
+        'MBA – Marketing',
+        'MBA – Business Analytics',
+        'MBA – Human Resource',
+        'MBA – Operations and Supply Chain',
+        'MBA – Finance',
+        'MBA – General Management',
+      ]
+      },
+      { id: 'amrita', short: 'Amrita', name: 'Amrita Vishwa Vidyapeetham', logo: 'logos/amrita-white.svg', prospectusUrl: 'prospectus/Amrita-MBA-Brochure.pdf',
+        courses: [
+        'MBA – Artificial Intelligence',
+        'MBA – Business Analytics',
+        'MBA – FinTech',
+        'MBA – Environmental, Social and Governance (ESG)',
+        'MBA – International Finance and Accounting (ACCA)',
+        'MBA – General Management',
+        'MBA – Marketing',
+        'MBA – Finance',
+        'MBA – Operations',
+        'MBA – Human Resources',
+      ]
+      },
+      { id: 'amity', short: 'Amity', name: 'Amity University Online', logo: 'logos/amity-color.svg', prospectusUrl: 'prospectus/Amity-MBA-Prospectus.pdf',
+        courses: [
+        'MBA – Finance & Accounting Management',
+        'MBA – Information Technology Management',
+        'MBA – Global Finance Market',
+        'MBA – Digital Marketing Management',
+        'MBA – Insurance Management',
+        'MBA – Business Analytics',
+        'MBA – International Finance (ACCA)',
+        'MBA – Digital Entrepreneurship',
+        'MBA – Marketing & Sales Management',
+        'MBA – Human Resource Management',
+        'MBA – International Business Management',
+        'MBA – Human Resources Analytics',
+        'MBA – Retail Management',
+        'MBA – Hospitality Management',
+        'MBA – Entrepreneurship & Leadership Management',
+        'MBA – Production & Operations Management',
+        'MBA – Data Science',
+        'MBA – General Management',
+      ]
+      },
+      { id: 'manipal', short: 'Manipal', name: 'Manipal Academy of Higher Education', logo: 'logos/manipal.png', prospectusUrl: 'https://onlinemanipal.mba/',
+        courses: [
+        'MBA – Marketing',
+        'MBA – Finance',
+        'MBA – Human Resources',
+        'MBA – Business Analytics',
+        'MBA – Operations Management',
+        'MBA – Digital Marketing',
+        'MBA – Healthcare Management',
+        'MBA – Information Technology',
+        'MBA – Supply Chain Management',
+        'MBA – Banking & Insurance',
+      ]
+      }
     ],
 
-    indianStates: [
-      'Andhra Pradesh', 'Delhi', 'Gujarat', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
-      'Odisha', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh', 'West Bengal', 'Other'
-    ],
 
     /* ---------- comparison page ---------- */
     cmp: {

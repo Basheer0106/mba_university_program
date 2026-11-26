@@ -92,9 +92,9 @@
   var initial = function () {
     return {
       /* step 1 */
-      fullName: '', email: '', phone: '', city: '', state: '', status: '', consent: false,
+      fullName: '', email: '', phone: '', status: '', university: '', course: '', consent: false,
       /* step 3 */
-      universities: [], qualification: '', percentage: '', passingYear: '', experience: '',
+      qualification: '', percentage: '', passingYear: '', experience: '',
       intake: '', payment: '', comments: ''
     };
   };
@@ -123,16 +123,15 @@
     if (d.fullName.trim().length < 2) e.fullName = 'Enter your full name';
     if (!emailRe.test(d.email)) e.email = 'Enter a valid email address';
     if (!/^[6-9]\d{9}$/.test(d.phone)) e.phone = 'Enter a valid 10-digit mobile number';
-    if (!d.city.trim()) e.city = 'Enter your city';
-    if (!d.state) e.state = 'Select your state';
     if (!d.status) e.status = 'Select what describes you best';
+    if (!d.university) e.university = 'Select the university you are interested in';
+    if (!d.course) e.course = 'Select a course';
     if (!d.consent) e.consent = 'Please agree to be contacted';
     return e;
   }
 
   function validateAdmission(d) {
     var e = {};
-    if (d.universities.length === 0) e.universities = 'Select at least one university';
     if (!d.qualification) e.qualification = 'Select your highest qualification';
     var p = Number(d.percentage);
     if (!d.percentage || p < 1 || p > 100) e.percentage = 'Enter a percentage between 1 and 100';
@@ -191,6 +190,27 @@
       '</select>'
     );
   }
+  /* <select> where each option has its own value and label, e.g. {value:'vit', label:'VIT University'} */
+  function selectKV(id, placeholder, options) {
+    return (
+      '<select id="' + id + '">' +
+      '<option value="">' + esc(placeholder) + '</option>' +
+      options.map(function (o) {
+        return '<option value="' + esc(o.value) + '"' + (data[id] === o.value ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+      }).join('') +
+      '</select>'
+    );
+  }
+  /* the courses offered by the university that is currently selected */
+  function coursesOf(universityId) {
+    var u = byId(D.universities, universityId);
+    return u ? u.courses : [];
+  }
+  function courseOptionsHtml() {
+    var list = coursesOf(data.university);
+    return '<option value="">' + (list.length ? 'Select course' : 'Select a university first') + '</option>' +
+      list.map(function (c) { return '<option' + (data.course === c ? ' selected' : '') + '>' + esc(c) + '</option>'; }).join('');
+  }
   var sidePanel =
     '<aside class="panel"><img src="img/journey.webp" alt="Your MBA Journey Starts Here! Get personalized university counseling and admission assistance. Compare Top Universities, Explore MBA Programs, Apply with Ease." /></aside>';
 
@@ -208,9 +228,9 @@
           field({ id: 'fullName', label: 'Full Name', required: true, icon: 'user', control: textInput('fullName', 'autocomplete="name" placeholder="Enter your full name"') }) +
           field({ id: 'email', label: 'Email Address', required: true, icon: 'mail', control: textInput('email', 'type="email" autocomplete="email" placeholder="you@example.com"') }) +
           field({ id: 'phone', label: 'Mobile Number', required: true, icon: 'phone', prefix: '+91', control: textInput('phone', 'inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="98765 43210"') }) +
-          field({ id: 'city', label: 'City', required: true, icon: 'pin', control: textInput('city', 'autocomplete="address-level2" placeholder="Enter your city"') }) +
-          field({ id: 'state', label: 'State', required: true, icon: 'pin', control: select('state', 'Select state', D.indianStates) }) +
           field({ id: 'status', label: 'I am a', required: true, icon: 'briefcase', control: select('status', 'Select', ['Working professional', 'Final-year student', 'Graduate (not working)', 'Entrepreneur / Business owner']) }) +
+          field({ id: 'university', label: 'University Interested In', required: true, icon: 'cap', control: selectKV('university', 'Select university', D.universities.map(function (u) { return { value: u.id, label: u.name }; })) }) +
+          field({ id: 'course', label: 'Course', required: true, icon: 'book', control: '<select id="course"' + (data.university ? '' : ' disabled') + '>' + courseOptionsHtml() + '</select>' }) +
         '</div>' +
         '<label class="check" data-field="consent"><input type="checkbox" id="consent"' + (data.consent ? ' checked' : '') + ' />' +
           '<span>I agree to be contacted by counsellors via call, SMS, WhatsApp and email.</span></label>' +
@@ -224,20 +244,11 @@
 
   /* ---------- Step 3 · Admission Details ---------- */
   function step3Html() {
-    var chips = D.universities.map(function (u) {
-      var on = data.universities.indexOf(u.id) > -1;
-      return '<label class="chip' + (on ? ' on' : '') + '"><input type="checkbox" data-uni="' + u.id + '"' + (on ? ' checked' : '') + ' />' + esc(u.name) + '</label>';
-    }).join('');
-
     return (
       '<form class="apply-body s3" id="form3" novalidate>' + sidePanel +
       '<div class="apply-main"><div class="step">' +
         '<h2 class="page-title">Admission Details</h2>' +
         '<p class="muted">Almost done &mdash; share a few academic details to start your admission.</p>' +
-        '<fieldset class="chips" data-field="universities">' +
-          '<legend>Universities you are interested in <span class="req">*</span></legend>' +
-          '<div class="chip-row">' + chips + '</div>' +
-        '</fieldset>' +
         '<div class="grid2">' +
           field({ id: 'qualification', label: 'Highest Qualification', required: true, icon: 'cap', control: select('qualification', 'Select', ["Bachelor's degree (3 years)", "Bachelor's degree (4 years)", "Master's degree", 'Diploma']) }) +
           field({ id: 'percentage', label: 'Graduation Aggregate (%)', required: true, icon: 'percent', control: textInput('percentage', 'type="number" min="1" max="100" step="0.01"') }) +
@@ -400,7 +411,8 @@
 
   /* ---------- Thank you ---------- */
   function thanksHtml() {
-    var picked = data.universities.map(function (id) { var u = byId(D.universities, id); return u && u.short; }).filter(Boolean);
+    var u = byId(D.universities, data.university);
+    var picked = u ? [u.short + (data.course ? ' (' + data.course + ')' : '')] : [];
     return (
       '<div class="apply-card success"><div class="tick" aria-hidden="true">✓</div>' +
       '<h2 class="page-title">Thank you, ' + esc(data.fullName.trim().split(' ')[0]) + '!</h2>' +
@@ -417,8 +429,11 @@
     var row = {
       submittedAt: new Date().toISOString(),
       fullName: d.fullName.trim(), email: d.email.trim(), phone: '+91 ' + d.phone,
-      city: d.city.trim(), state: d.state, status: d.status,
-      universities: d.universities.map(function (id) { var u = byId(D.universities, id); return u ? u.name : id; }).join(', '),
+      status: d.status,
+      /* "University (Course)" goes into the existing "Interested universities" column, so it is saved even
+         before the Apps Script has a separate Course column; `course` is also sent on its own. */
+      universities: (function () { var u = byId(D.universities, d.university); return (u ? u.name : d.university) + (d.course ? ' (' + d.course + ')' : ''); })(),
+      course: d.course,
       qualification: d.qualification, percentage: d.percentage, passingYear: d.passingYear,
       experience: d.experience, intake: d.intake, payment: d.payment,
       comments: d.comments.trim(), consent: d.consent ? 'Yes' : 'No'
@@ -477,20 +492,210 @@
     if (step === 3) { body.innerHTML = step3Html(); bindForm(body, 3); }
   }
 
+  /* ================================================================== THEMED DROPDOWNS */
+  /* The browser's own <select> list cannot be styled, so each <select> in the forms is hidden and replaced
+     by a button + list that match the site. The real <select> stays in the page (it keeps the value and
+     fires the same input/change events), so validation and saving work exactly as before. */
+  var CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  var openDropdown = null;
+
+  document.addEventListener('click', function (ev) {
+    if (openDropdown && !openDropdown.wrap.contains(ev.target)) openDropdown.close();
+  });
+  window.addEventListener('resize', function () { if (openDropdown) openDropdown.close(); });
+
+  function enhanceSelect(sel) {
+    if (sel._dd) { sel._dd.refresh(); return; }
+
+    var uid = 'dd-' + sel.id;
+    var wrap = document.createElement('div');
+    wrap.className = 'dd';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dd-btn';
+    btn.id = uid + '-btn';
+    btn.setAttribute('role', 'combobox');
+    btn.setAttribute('aria-haspopup', 'listbox');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', uid + '-list');
+    btn.innerHTML = '<span class="dd-text"></span><span class="dd-chev">' + CHEVRON + '</span>';
+    var text = btn.firstChild;
+
+    var list = document.createElement('ul');
+    list.className = 'dd-list';
+    list.id = uid + '-list';
+    list.setAttribute('role', 'listbox');
+    list.hidden = true;
+
+    wrap.appendChild(btn);
+    wrap.appendChild(list);
+    sel.insertAdjacentElement('afterend', wrap);
+    sel.classList.add('dd-native');
+    sel.setAttribute('tabindex', '-1');
+    sel.setAttribute('aria-hidden', 'true');
+
+    /* clicking the label should focus the visible button */
+    var label = document.querySelector('label[for="' + sel.id + '"]');
+    if (label) {
+      if (!label.id) label.id = uid + '-label';
+      label.setAttribute('for', btn.id);
+      btn.setAttribute('aria-labelledby', label.id);
+    }
+
+    var active = -1;
+    var typed = '';
+    var typedTimer = 0;
+    var choices = function () { return Array.prototype.slice.call(sel.options).filter(function (o) { return o.value !== ''; }); };
+
+    var logoEl = null; // only used by the University field: shows the chosen university's logo
+
+    function paintButton() {
+      var has = sel.value !== '';
+      var o = sel.options[sel.selectedIndex];
+      text.textContent = has && o ? o.text : (sel.options[0] ? sel.options[0].text : 'Select');
+      btn.classList.toggle('placeholder', !has);
+      btn.disabled = sel.disabled;
+      wrap.classList.toggle('disabled', sel.disabled);
+
+      if (sel.id === 'university') {
+        var ctl = wrap.closest('.control');
+        var u = has ? byId(D.universities, sel.value) : null;
+        if (u && u.logo) {
+          if (!logoEl) {
+            logoEl = document.createElement('span');
+            btn.insertBefore(logoEl, text);
+          }
+          logoEl.className = 'dd-logo t-' + u.id;           /* badge colour = the university's colour */
+          logoEl.innerHTML = '<img src="' + esc(u.logo) + '" alt="" />';
+          btn.classList.add('has-logo');
+          if (ctl) ctl.classList.add('has-logo');            /* hides the generic cap icon */
+        } else {
+          if (logoEl) { logoEl.remove(); logoEl = null; }
+          btn.classList.remove('has-logo');
+          if (ctl) ctl.classList.remove('has-logo');
+        }
+      }
+    }
+
+    function paintList() {
+      list.innerHTML = choices().map(function (o, i) {
+        var on = o.value === sel.value;
+        return '<li role="option" id="' + uid + '-o' + i + '" class="dd-opt' + (on ? ' sel' : '') + '" aria-selected="' + on + '" data-i="' + i + '">' +
+          '<span>' + esc(o.text) + '</span>' + (on ? '<i class="dd-tick">' + I.check + '</i>' : '') + '</li>';
+      }).join('');
+    }
+
+    function setActive(i, scroll) {
+      var items = $$('.dd-opt', list);
+      if (!items.length) return;
+      active = Math.max(0, Math.min(items.length - 1, i));
+      items.forEach(function (li, n) { li.classList.toggle('act', n === active); });
+      btn.setAttribute('aria-activedescendant', items[active].id);
+      if (scroll !== false) items[active].scrollIntoView({ block: 'nearest' });
+    }
+
+    function open() {
+      if (sel.disabled) return;
+      if (openDropdown && openDropdown !== api) openDropdown.close();
+      paintList();
+      list.hidden = false;
+      wrap.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+      /* open upwards when there is not enough room underneath */
+      var r = btn.getBoundingClientRect();
+      var need = Math.min(list.scrollHeight, 264) + 12;
+      wrap.classList.toggle('up', window.innerHeight - r.bottom < need && r.top > window.innerHeight - r.bottom);
+      var idx = choices().map(function (o) { return o.value; }).indexOf(sel.value);
+      setActive(idx < 0 ? 0 : idx);
+      openDropdown = api;
+    }
+
+    function close() {
+      list.hidden = true;
+      wrap.classList.remove('open', 'up');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.removeAttribute('aria-activedescendant');
+      active = -1;
+      if (openDropdown === api) openDropdown = null;
+    }
+
+    function choose(i) {
+      var o = choices()[i];
+      if (!o) return;
+      sel.value = o.value;
+      sel.dispatchEvent(new Event('input', { bubbles: true }));
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      paintButton();
+      close();
+      btn.focus();
+    }
+
+    btn.addEventListener('click', function () { if (wrap.classList.contains('open')) close(); else open(); });
+
+    btn.addEventListener('keydown', function (ev) {
+      var isOpen = wrap.classList.contains('open');
+      var k = ev.key;
+      if (k === 'ArrowDown' || k === 'ArrowUp') {
+        ev.preventDefault();
+        if (!isOpen) open(); else setActive(active + (k === 'ArrowDown' ? 1 : -1));
+      } else if (k === 'Home' && isOpen) { ev.preventDefault(); setActive(0); }
+      else if (k === 'End' && isOpen) { ev.preventDefault(); setActive(choices().length - 1); }
+      else if (k === 'Enter' || k === ' ') {
+        if (isOpen && active > -1) { ev.preventDefault(); choose(active); }
+        else if (!isOpen) { ev.preventDefault(); open(); }
+      } else if (k === 'Escape' && isOpen) { ev.preventDefault(); close(); }
+      else if (k === 'Tab' && isOpen) { close(); }
+      else if (k.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+        /* type-ahead: jump to the first option that starts with what was typed */
+        typed += k.toLowerCase();
+        clearTimeout(typedTimer);
+        typedTimer = setTimeout(function () { typed = ''; }, 600);
+        var texts = choices().map(function (o) { return o.text.toLowerCase().replace(/^mba\s*[–-]\s*/, ''); });
+        var hit = texts.findIndex(function (t) { return t.indexOf(typed) === 0; });
+        if (hit > -1) { if (!isOpen) open(); setActive(hit); }
+      }
+    });
+
+    /* keep focus on the button while using the mouse on the list */
+    list.addEventListener('mousedown', function (ev) { ev.preventDefault(); });
+    list.addEventListener('click', function (ev) {
+      var li = ev.target.closest('.dd-opt');
+      if (li) choose(Number(li.getAttribute('data-i')));
+    });
+    list.addEventListener('mousemove', function (ev) {
+      var li = ev.target.closest('.dd-opt');
+      if (li) setActive(Number(li.getAttribute('data-i')), false);
+    });
+
+    var api = {
+      wrap: wrap,
+      close: close,
+      /* call after the <select>'s options / value / disabled state were changed from code */
+      refresh: function () { paintButton(); if (wrap.classList.contains('open')) paintList(); }
+    };
+    sel._dd = api;
+    paintButton();
+  }
+
   /* ---------- wiring for the two real forms ---------- */
   function bindForm(body, which) {
     var form = $('form', body);
+    $$('select', form).forEach(enhanceSelect);
 
     /* every typed answer is stored straight away */
     var onEdit = function (ev) {
       var t = ev.target;
-      if (t.hasAttribute('data-uni')) { // university chips
-        var id = t.getAttribute('data-uni');
-        var list = data.universities.filter(function (x) { return x !== id; });
-        if (t.checked) list.push(id);
-        update({ universities: list });
-        t.closest('.chip').classList.toggle('on', t.checked);
-        setError(form, 'universities', '');
+      if (t.id === 'university') { // a different university has different courses
+        update({ university: t.value, course: '' });
+        var cs = $('#course', form);
+        if (cs) {
+          cs.innerHTML = courseOptionsHtml();
+          cs.disabled = !t.value;
+          if (cs._dd) cs._dd.refresh();
+        }
+        setError(form, 'university', '');
+        setError(form, 'course', '');
         return;
       }
       if (!t.id || !(t.id in data)) return;
