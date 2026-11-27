@@ -94,6 +94,7 @@ button,input,select,textarea{font:inherit}
 .muted{color:var(--muted);margin:0 0 20px}.tiny{font-size:.8rem;margin:14px 0 0}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;margin-bottom:16px}
 @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.grid2 > .field[data-field="course"]{grid-column:1 / -1}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-weight:600;font-size:.9rem}
 input:not([type=checkbox]),select,textarea{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-height:46px}
@@ -126,7 +127,7 @@ fieldset.chips{border:0;padding:0;margin:0 0 20px}
 
 /* ===== Apply card (stepper, panel, fields) ===== */
 .apply-card{background:#fff;border:1px solid #dfe8f7;border-radius:22px;padding:clamp(18px,3vw,30px);box-shadow:0 12px 34px rgba(15,47,120,.12)}
-.steps{list-style:none;margin:0 auto 26px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);max-width:560px}
+.steps{list-style:none;margin:0 auto 26px;padding:0;display:grid;grid-template-columns:repeat(2,1fr);max-width:380px}
 .steps li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:#5b6b88;font-size:.8rem;font-weight:600}
 .steps .dot{position:relative;z-index:1;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#a8b0c0;color:#fff;font-weight:800;font-size:1rem}
 .steps .dot svg{width:16px;height:16px}
@@ -534,3 +535,25 @@ button.step-link{background:none;border:0;padding:0;font:inherit;cursor:pointer}
 
 /* the application card (and any open dropdown list) must paint above the trust strip and footer below it */
 .form-section{position:relative;z-index:10}
+
+/* prospectus links shown after a successful submission */
+.thanks-links{margin-top:28px;text-align:left}
+.thanks-links h3{font-size:1.25rem;color:#0f2f78;margin:0 0 4px}
+.thanks-links > p{color:#5b6b8c;margin:0 0 14px}
+
+/* prospectus link cards: logo band + campus photo, like the university cards at the top */
+.link-logo{width:190px;min-height:0;padding:0;overflow:hidden;display:flex;flex-direction:column;background:#fff;border:2px solid #e5b64a}
+.link-logo .ll-top{background:var(--c,#0f2f78);display:grid;place-items:center;padding:12px 10px;min-height:62px}
+.link-logo .ll-top img{max-width:100%;max-height:40px;object-fit:contain}
+.link-card.t-manipal .ll-top{background:#fff;border-bottom:1px solid #f1d9c7}
+.link-logo .ll-photo{display:block;width:100%;flex:1;min-height:84px;object-fit:cover}
+@media(max-width:480px){.link-logo{width:128px}}
+/* explicit band colours so each logo sits on its own background edge to edge */
+.link-card.t-vit .link-logo .ll-top{background:#12388a}
+.link-card.t-amrita .link-logo .ll-top{background:#a31a34}
+.link-card.t-amity .link-logo .ll-top{background:#1a325d}
+.link-card.t-manipal .link-logo .ll-top{background:#fff}
+.link-logo .ll-top{min-height:72px;padding:12px 14px}
+.link-logo .ll-top img{max-height:48px}
+.link-logo{align-items:stretch;place-items:stretch}
+.link-logo .ll-top{width:100%;box-sizing:border-box}

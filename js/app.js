@@ -2,7 +2,7 @@
  *
  * One page. This script does three things:
  *   1. page effects  – fade-in on scroll, top progress bar, smooth in-page links
- *   2. the 3-step application (#apply):  1 Basic Details → 2 Compare → 3 Admission Details → Thank you
+ *   2. the 2-step application (#apply):  1 Basic Details → 2 Compare & Submit → Thank you
  *   3. saving each finished application as one row in a Google Sheet (see js/config.js)
  * Content (comparison tables, fees, links) comes from js/data.js; icons from js/icons.js.
  */
@@ -14,7 +14,6 @@
   var CFG = window.APP_CONFIG || {};
   var CMP = D.cmp;
   var STORE_KEY = 'mba-form-v1';
-  var STEP_LABELS = ['Basic Details', 'Compare Universities', 'Admission Details'];
 
   /* ------------------------------------------------------------------ helpers */
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
@@ -93,9 +92,6 @@
     return {
       /* step 1 */
       fullName: '', email: '', phone: '', status: '', university: '', course: '', consent: false,
-      /* step 3 */
-      qualification: '', percentage: '', passingYear: '', experience: '',
-      intake: '', payment: '', comments: ''
     };
   };
 
@@ -123,22 +119,9 @@
     if (d.fullName.trim().length < 2) e.fullName = 'Enter your full name';
     if (!emailRe.test(d.email)) e.email = 'Enter a valid email address';
     if (!/^[6-9]\d{9}$/.test(d.phone)) e.phone = 'Enter a valid 10-digit mobile number';
-    if (!d.status) e.status = 'Select what describes you best';
     if (!d.university) e.university = 'Select the university you are interested in';
     if (!d.course) e.course = 'Select a course';
     if (!d.consent) e.consent = 'Please agree to be contacted';
-    return e;
-  }
-
-  function validateAdmission(d) {
-    var e = {};
-    if (!d.qualification) e.qualification = 'Select your highest qualification';
-    var p = Number(d.percentage);
-    if (!d.percentage || p < 1 || p > 100) e.percentage = 'Enter a percentage between 1 and 100';
-    if (!/^(19|20)\d{2}$/.test(d.passingYear)) e.passingYear = 'Enter a valid year (e.g. 2022)';
-    if (!d.experience) e.experience = 'Select your work experience';
-    if (!d.intake) e.intake = 'Select a preferred intake';
-    if (!d.payment) e.payment = 'Select a payment preference';
     return e;
   }
 
@@ -217,53 +200,28 @@
   /* ================================================================== 3. THE STEPS */
 
   /* ---------- Step 1 · Basic Details ---------- */
-  function step1Html() {
+  function formHtml(n) {
     return (
       '<form class="apply-body s1" id="form1" novalidate>' + sidePanel +
       '<div class="apply-main"><div class="step">' +
         '<h2 class="page-title">Tell us about yourself</h2>' +
-        (resumeTo ? '<p class="callout">Almost there &mdash; please fill in your details to continue to the admission step.</p>' : '') +
         '<p class="muted">Let&rsquo;s get started with some basic details.</p>' +
         '<div class="grid2">' +
           field({ id: 'fullName', label: 'Full Name', required: true, icon: 'user', control: textInput('fullName', 'autocomplete="name" placeholder="Enter your full name"') }) +
           field({ id: 'email', label: 'Email Address', required: true, icon: 'mail', control: textInput('email', 'type="email" autocomplete="email" placeholder="you@example.com"') }) +
           field({ id: 'phone', label: 'Mobile Number', required: true, icon: 'phone', prefix: '+91', control: textInput('phone', 'inputmode="numeric" maxlength="10" autocomplete="tel-national" placeholder="98765 43210"') }) +
-          field({ id: 'status', label: 'I am a', required: true, icon: 'briefcase', control: select('status', 'Select', ['Working professional', 'Final-year student', 'Graduate (not working)', 'Entrepreneur / Business owner']) }) +
           field({ id: 'university', label: 'University Interested In', required: true, icon: 'cap', control: selectKV('university', 'Select university', D.universities.map(function (u) { return { value: u.id, label: u.name }; })) }) +
           field({ id: 'course', label: 'Course', required: true, icon: 'book', control: '<select id="course"' + (data.university ? '' : ' disabled') + '>' + courseOptionsHtml() + '</select>' }) +
         '</div>' +
         '<label class="check" data-field="consent"><input type="checkbox" id="consent"' + (data.consent ? ' checked' : '') + ' />' +
           '<span>I agree to be contacted by counsellors via call, SMS, WhatsApp and email.</span></label>' +
       '</div>' +
-      '<div class="actions"><span></span><div class="next-wrap">' +
-        '<button type="submit" class="btn pill">Next <span class="arr">' + I.arrow + '</span></button>' +
-        '<small class="step-count">Step 1 of 3</small></div></div>' +
-      '</div></form>'
-    );
-  }
-
-  /* ---------- Step 3 · Admission Details ---------- */
-  function step3Html() {
-    return (
-      '<form class="apply-body s3" id="form3" novalidate>' + sidePanel +
-      '<div class="apply-main"><div class="step">' +
-        '<h2 class="page-title">Admission Details</h2>' +
-        '<p class="muted">Almost done &mdash; share a few academic details to start your admission.</p>' +
-        '<div class="grid2">' +
-          field({ id: 'qualification', label: 'Highest Qualification', required: true, icon: 'cap', control: select('qualification', 'Select', ["Bachelor's degree (3 years)", "Bachelor's degree (4 years)", "Master's degree", 'Diploma']) }) +
-          field({ id: 'percentage', label: 'Graduation Aggregate (%)', required: true, icon: 'percent', control: textInput('percentage', 'type="number" min="1" max="100" step="0.01"') }) +
-          field({ id: 'passingYear', label: 'Year of Passing', required: true, icon: 'calendar', control: textInput('passingYear', 'inputmode="numeric" maxlength="4" placeholder="e.g. 2022"') }) +
-          field({ id: 'experience', label: 'Work Experience', required: true, icon: 'briefcase', control: select('experience', 'Select', ['Fresher', '1–3 years', '3–5 years', '5+ years']) }) +
-          field({ id: 'intake', label: 'Preferred Intake', required: true, icon: 'calendar', control: select('intake', 'Select', ['January 2027', 'July 2027']) }) +
-          field({ id: 'payment', label: 'Payment Preference', required: true, icon: 'wallet', control: select('payment', 'Select', ['Full payment', 'Semester-wise', 'No-cost EMI / Education loan']) }) +
-        '</div>' +
-        '<div class="field"><label for="comments">Anything else we should know? (optional)</label>' +
-          '<div class="control"><textarea id="comments" rows="2">' + esc(data.comments) + '</textarea></div></div>' +
-      '</div>' +
-      '<div class="actions">' +
-        '<button type="button" class="btn ghost" data-go="2">← Back</button>' +
-        '<div class="next-wrap"><button type="submit" class="btn pill" id="submitBtn">Submit Application</button>' +
-        '<small class="step-count">Step 3 of 3</small></div></div>' +
+      '<div class="actions">' + (n > 1 ? '<button type="button" class="btn ghost" data-go="' + (n - 1) + '">← Back</button>' : '<span></span>') +
+        '<div class="next-wrap">' +
+        (n === 1
+          ? '<button type="submit" class="btn pill">Next <span class="arr">' + I.arrow + '</span></button>'
+          : '<button type="submit" class="btn pill" id="submitBtn">Submit Application</button>') +
+        '<small class="step-count">Step ' + n + ' of 2</small></div></div>' +
       '</div></form>'
     );
   }
@@ -300,7 +258,7 @@
   }
   var callout = function (strong, text) { return '<p class="callout"><b>' + esc(strong) + '</b> ' + esc(text) + '</p>'; };
 
-  function step2Html() {
+  function compareHtml(n) {
     var st = CMP.status;
     var f = CMP.fees;
 
@@ -336,21 +294,7 @@
       '<h4 class="snap-title">Verification checklist</h4><ul class="checklist">' +
       CMP.verificationChecklist.map(function (v) { return '<li><span>' + I.check + '</span>' + esc(v) + '</li>'; }).join('') + '</ul>';
 
-    var links =
-      '<div class="links-grid">' +
-      cols.map(function (c) {
-        var l = CMP.officialLinks[c.id];
-        var uni = byId(D.universities, c.id);
-        var pdf = uni.prospectusUrl.indexOf('http') === 0 ? null : uni.prospectusUrl;
-        return '<article class="link-card t-' + c.theme + '">' +
-          '<div class="link-logo"><img src="' + esc(uni.logo) + '" alt="' + esc(l.name) + ' logo" /></div>' +
-          '<div class="link-body"><h4>' + esc(l.name) + '</h4>' +
-          '<p><b>Programme / prospectus:</b> <a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + esc(l.programme) + '</a></p>' +
-          '<p><b>Admission:</b> <a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + esc(l.admission) + '</a></p>' +
-          '<small class="url">' + esc(l.url) + '</small>' +
-          (pdf ? '<a class="btn small" href="' + esc(pdf) + '" download>Download brochure (PDF)</a>' : '') +
-          '</div></article>';
-      }).join('') + '</div>' +
+    var disclaimer =
       '<p class="disclaimer"><b>Information disclaimer.</b> ' + esc(CMP.disclaimer) + '</p>';
 
     return (
@@ -374,11 +318,14 @@
         section('fees', 7, 'Fee comparison', f.intro, feeTable + snapshot) +
         section('regulatory', 8, 'Official prospectus & regulatory checks', CMP.regulatoryIntro, checklist) +
         section('choose', 9, 'How to choose', '', '<p class="plain">' + esc(CMP.howToChoose) + '</p>') +
-        section('links', 10, 'University prospectus & admission links', 'Open the official Online MBA programme / admission page of each university.', links) +
+        disclaimer +
       '</div>' +
-      '<div class="actions"><button type="button" class="btn ghost" data-go="1">← Back</button>' +
-      '<div class="next-wrap"><button type="button" class="btn pill" data-go="3">Next <span class="arr">' + I.arrow + '</span></button>' +
-      '<small class="step-count">Step 2 of 3</small></div></div>' +
+      '<div class="actions">' + (n > 1 ? '<button type="button" class="btn ghost" data-go="' + (n - 1) + '">← Back</button>' : '<span></span>') +
+      '<div class="next-wrap">' +
+      (n === 1
+        ? '<button type="button" class="btn pill" data-go="2">Next <span class="arr">' + I.arrow + '</span></button>'
+        : '<button type="button" class="btn pill" id="submitBtn" data-action="submit">Submit Application</button>') +
+      '<small class="step-count">Step ' + n + ' of 2</small></div></div>' +
       '</div></div>'
     );
   }
@@ -409,6 +356,26 @@
     onCompareScroll = null;
   }
 
+  function linksGridHtml() {
+    return (
+      '<div class="links-grid">' +
+      cols.map(function (c) {
+        var l = CMP.officialLinks[c.id];
+        var uni = byId(D.universities, c.id);
+        var pdf = uni.prospectusUrl.indexOf('http') === 0 ? null : uni.prospectusUrl;
+        return '<article class="link-card t-' + c.theme + '">' +
+          '<div class="link-logo"><span class="ll-top" style="background:' + ({ vit: '#12388a', amrita: '#a31a34', amity: '#1a325d', manipal: '#ffffff' }[c.id] || '#0f2f78') + '"><img src="' + esc(uni.logo) + '" alt="' + esc(l.name) + ' logo" /></span>' +
+          '<img class="ll-photo" src="img/' + esc(c.id) + '.jpg" alt="' + esc(l.name) + ' campus" loading="lazy" /></div>' +
+          '<div class="link-body"><h4>' + esc(l.name) + '</h4>' +
+          '<p><b>Programme / prospectus:</b> <a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + esc(l.programme) + '</a></p>' +
+          '<p><b>Admission:</b> <a href="' + esc(l.url) + '" target="_blank" rel="noopener noreferrer">' + esc(l.admission) + '</a></p>' +
+          '<small class="url">' + esc(l.url) + '</small>' +
+          (pdf ? '<a class="btn small" href="' + esc(pdf) + '" download>Download brochure (PDF)</a>' : '') +
+          '</div></article>';
+      }).join('') + '</div>' 
+    );
+  }
+
   /* ---------- Thank you ---------- */
   function thanksHtml() {
     var u = byId(D.universities, data.university);
@@ -418,7 +385,9 @@
       '<h2 class="page-title">Thank you, ' + esc(data.fullName.trim().split(' ')[0]) + '!</h2>' +
       '<p>Your enquiry' + (picked.length ? ' for <b>' + esc(picked.join(', ')) + '</b>' : '') +
       ' has been received. Our counsellor will call you on <b>+91 ' + esc(data.phone) + '</b> shortly.</p>' +
-      '<button type="button" class="btn pill" data-action="reset">Submit another enquiry</button></div>'
+      '<button type="button" class="btn pill" data-action="reset">Submit another enquiry</button></div>' +
+      '<section class="thanks-links"><h3>University prospectus &amp; admission links</h3>' +
+      '<p>Open the official Online MBA programme / admission page of each university.</p>' + linksGridHtml() + '</section>'
     );
   }
 
@@ -429,13 +398,11 @@
     var row = {
       submittedAt: new Date().toISOString(),
       fullName: d.fullName.trim(), email: d.email.trim(), phone: '+91 ' + d.phone,
-      status: d.status,
+
       /* the university's name only; the course goes in its own "Course" column */
       universities: (function () { var u = byId(D.universities, d.university); return u ? u.name : d.university; })(),
       course: d.course,
-      qualification: d.qualification, percentage: d.percentage, passingYear: d.passingYear,
-      experience: d.experience, intake: d.intake, payment: d.payment,
-      comments: d.comments.trim(), consent: d.consent ? 'Yes' : 'No'
+      consent: d.consent ? 'Yes' : 'No'
     };
     /* text/plain avoids a CORS preflight, which Apps Script does not answer.
        The reply is opaque (no-cors), so only a network failure can be detected here. */
@@ -449,14 +416,18 @@
   /* ================================================================== 5. THE FLOW (which step is on screen) */
 
   var host = document.getElementById('apply');
-  var step = 1; // 1 | 2 | 3 | 'done'
-  var resumeTo = null; // set when the visitor opened the comparison first: after step 1, continue to this step
+  var step = 1; // 1 | 2 | 'done'
+  /* Two orders: scrolling down gives  form → comparison (+ submit);
+     the hero's "Compare MBA Courses" button gives  comparison → form (+ submit). */
+  var compareFirst = false;
+  function viewAt(n) { return (n === 1) === compareFirst ? 'compare' : 'form'; }
+  function stepLabels() { return compareFirst ? ['Compare Universities', 'Your Details'] : ['Basic Details', 'Compare & Submit']; }
 
   function stepperHtml() {
-    return '<ol class="steps" aria-label="Form progress">' + STEP_LABELS.map(function (label, i) {
+    return '<ol class="steps" aria-label="Form progress">' + stepLabels().map(function (label, i) {
       var n = i + 1;
       var before = typeof step === 'number' && step > n;                      // a step we have already passed
-      var ticked = before && !(n === 1 && Object.keys(validateBasic(data)).length); // ...and really finished
+      var ticked = before && !(viewAt(n) === 'form' && Object.keys(validateBasic(data)).length); // ...and really finished
       var state = step === n ? 'active' : ticked ? 'done' : '';
       var inner = '<span class="dot">' + (ticked ? I.check : n) + '</span><span class="slabel">' + label + '</span>';
       return '<li class="' + state + '"' + (step === n ? ' aria-current="step"' : '') + '>' +
@@ -486,9 +457,8 @@
     $('[data-host="stepper"]', host).innerHTML = stepperHtml();
     var body = $('[data-host="step"]', host);
 
-    if (step === 1) { body.innerHTML = step1Html(); bindForm(body, 1); }
-    if (step === 2) { body.innerHTML = step2Html(); bindCompare(body); }
-    if (step === 3) { body.innerHTML = step3Html(); bindForm(body, 3); }
+    if (viewAt(step) === 'form') { body.innerHTML = formHtml(step); bindForm(body); }
+    else { body.innerHTML = compareHtml(step); bindCompare(body); }
   }
 
   /* ================================================================== THEMED DROPDOWNS */
@@ -678,7 +648,7 @@
   }
 
   /* ---------- wiring for the two real forms ---------- */
-  function bindForm(body, which) {
+  function bindForm(body) {
     var form = $('form', body);
     $$('select', form).forEach(enhanceSelect);
 
@@ -710,43 +680,36 @@
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
 
-      if (which === 1) {
-        var e1 = validateBasic(data);
-        showErrors(form, e1);
-        if (Object.keys(e1).length === 0) {
-          var next = resumeTo || 2;
-          resumeTo = null;
-          go(next);
-        }
-        return;
-      }
+      var e1 = validateBasic(data);
+      showErrors(form, e1);
+      if (Object.keys(e1).length) return;
+      if (step === 1) go(2); else submitApplication();
+    });
+  }
 
-      var e3 = validateAdmission(data);
-      showErrors(form, e3);
-      if (Object.keys(e3).length) return;
-
-      var btn = $('#submitBtn', form);
-      var old = $('.submit-err', form);
-      if (old) old.remove();
-      btn.disabled = true;
-      btn.textContent = 'Submitting…';
-
-      saveLead(data).then(function () {
-        step = 'done';
-        render();
-        requestAnimationFrame(function () { scrollToId('apply'); });
-      }).catch(function (err) {
-        console.error(err);
-        btn.disabled = false;
-        btn.textContent = 'Submit Application';
-        var p = document.createElement('p');
-        p.className = 'err submit-err';
-        p.setAttribute('role', 'alert');
-        p.textContent = CFG.sheetUrl
-          ? 'Could not submit right now. Please check your internet connection and try again.'
-          : 'Spreadsheet is not connected yet (set sheetUrl in js/config.js).';
-        $('.actions', form).insertAdjacentElement('beforebegin', p);
-      });
+  /* Step 2's "Submit Application": needs the basic details; if they are missing, ask for them first */
+  function submitApplication() {
+    if (Object.keys(validateBasic(data)).length) { go(compareFirst ? 2 : 1); return; } // the details are missing – show the form
+    var btn = $('#submitBtn', host);
+    var old = $('.submit-err', host);
+    if (old) old.remove();
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    saveLead(data).then(function () {
+      step = 'done';
+      render();
+      requestAnimationFrame(function () { scrollToId('apply'); });
+    }).catch(function (err) {
+      console.error(err);
+      btn.disabled = false;
+      btn.textContent = 'Submit Application';
+      var p = document.createElement('p');
+      p.className = 'err submit-err';
+      p.setAttribute('role', 'alert');
+      p.textContent = CFG.sheetUrl
+        ? 'Could not submit right now. Please check your internet connection and try again.'
+        : 'Spreadsheet is not connected yet (set sheetUrl in js/config.js).';
+      $('.actions', host).insertAdjacentElement('beforebegin', p);
     });
   }
 
@@ -754,17 +717,13 @@
   host.addEventListener('click', function (ev) {
     var g = ev.target.closest('[data-go]');
     if (g) {
-      var target = Number(g.getAttribute('data-go'));
-      if (step === 2 && target === 3 && Object.keys(validateBasic(data)).length) {
-        resumeTo = 3; // came here straight from the hero button – ask for the basic details first
-        go(1);
-        return;
-      }
-      go(target);
+      go(Number(g.getAttribute('data-go')));
       return;
     }
+    if (ev.target.closest('[data-action="submit"]')) { submitApplication(); return; }
     if (ev.target.closest('[data-action="reset"]')) {
       resetData();
+      compareFirst = false;
       step = 1;
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -777,7 +736,8 @@
     if (!o) return;
     ev.preventDefault();
     if (step === 'done') resetData(); // don't let a finished application be re-sent from the comparison
-    go(Number(o.getAttribute('data-open-step')));
+    compareFirst = true; // comparison first, then the form with the submit button
+    go(1);
   });
 
   /* ================================================================== start */

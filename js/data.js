@@ -96,8 +96,7 @@
         { id: 'placement', short: 'Placement' },
         { id: 'fees', short: 'Fees' },
         { id: 'regulatory', short: 'Checks' },
-        { id: 'choose', short: 'How to choose' },
-        { id: 'links', short: 'Official links' }
+        { id: 'choose', short: 'How to choose' }
       ],
 
       /* 1. status – keyed by university id */
