@@ -220,7 +220,7 @@
         '<div class="next-wrap">' +
         (n === 1
           ? '<button type="submit" class="btn pill">Next <span class="arr">' + I.arrow + '</span></button>'
-          : '<button type="submit" class="btn pill" id="submitBtn">Submit Application</button>') +
+          : '<button type="submit" class="btn pill" id="submitBtn">View Prospectus</button>') +
         '<small class="step-count">Step ' + n + ' of 2</small></div></div>' +
       '</div></form>'
     );
@@ -324,7 +324,7 @@
       '<div class="next-wrap">' +
       (n === 1
         ? '<button type="button" class="btn pill" data-go="2">Next <span class="arr">' + I.arrow + '</span></button>'
-        : '<button type="button" class="btn pill" id="submitBtn" data-action="submit">Submit Application</button>') +
+        : '<button type="button" class="btn pill" id="submitBtn" data-action="submit">View Prospectus</button>') +
       '<small class="step-count">Step ' + n + ' of 2</small></div></div>' +
       '</div></div>'
     );
@@ -379,13 +379,17 @@
   /* ---------- Thank you ---------- */
   function thanksHtml() {
     var u = byId(D.universities, data.university);
-    var picked = u ? [u.short + (data.course ? ' (' + data.course + ')' : '')] : [];
     return (
-      '<div class="apply-card success"><div class="tick" aria-hidden="true">✓</div>' +
+      '<div class="apply-card success"><div class="tick-wrap"><div class="tick" aria-hidden="true">' + I.check + '</div></div>' +
       '<h2 class="page-title">Thank you, ' + esc(data.fullName.trim().split(' ')[0]) + '!</h2>' +
-      '<p>Your enquiry' + (picked.length ? ' for <b>' + esc(picked.join(', ')) + '</b>' : '') +
-      ' has been received. Our counsellor will call you on <b>+91 ' + esc(data.phone) + '</b> shortly.</p>' +
-      '<button type="button" class="btn pill" data-action="reset">Submit another enquiry</button></div>' +
+      '<p class="thanks-sub">Your enquiry has been received. Our counsellor will call you shortly.</p>' +
+      '<ul class="thanks-chips">' +
+        (u ? '<li><span class="tc-label">University</span><b>' + esc(u.name) + '</b></li>' : '') +
+        (data.course ? '<li><span class="tc-label">Course</span><b>' + esc(data.course) + '</b></li>' : '') +
+        '<li><span class="tc-label">We will call you on</span><b>+91 ' + esc(data.phone) + '</b></li>' +
+      '</ul>' +
+      '<p class="thanks-next"><span>Choose your university, get the prospectus and proceed for admission through the university links.</span>' +
+        '<i aria-hidden="true">&darr;</i></p></div>' +
       '<section class="thanks-links"><h3>University prospectus &amp; admission links</h3>' +
       '<p>Open the official Online MBA programme / admission page of each university.</p>' + linksGridHtml() + '</section>'
     );
@@ -687,7 +691,7 @@
     });
   }
 
-  /* Step 2's "Submit Application": needs the basic details; if they are missing, ask for them first */
+  /* Step 2's "View Prospectus": needs the basic details; if they are missing, ask for them first */
   function submitApplication() {
     if (Object.keys(validateBasic(data)).length) { go(compareFirst ? 2 : 1); return; } // the details are missing – show the form
     var btn = $('#submitBtn', host);
@@ -702,7 +706,7 @@
     }).catch(function (err) {
       console.error(err);
       btn.disabled = false;
-      btn.textContent = 'Submit Application';
+      btn.textContent = 'View Prospectus';
       var p = document.createElement('p');
       p.className = 'err submit-err';
       p.setAttribute('role', 'alert');
