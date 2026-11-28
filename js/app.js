@@ -419,7 +419,7 @@
   var step = 1; // 1 | 2 | 'done'
   /* Two orders: scrolling down gives  form → comparison (+ submit);
      the hero's "Compare MBA Courses" button gives  comparison → form (+ submit). */
-  var compareFirst = false;
+  var compareFirst = true;
   function viewAt(n) { return (n === 1) === compareFirst ? 'compare' : 'form'; }
   function stepLabels() { return compareFirst ? ['Compare Universities', 'Your Details'] : ['Basic Details', 'Compare & Submit']; }
 
@@ -723,7 +723,7 @@
     if (ev.target.closest('[data-action="submit"]')) { submitApplication(); return; }
     if (ev.target.closest('[data-action="reset"]')) {
       resetData();
-      compareFirst = false;
+      compareFirst = true;
       step = 1;
       render();
       window.scrollTo({ top: 0, behavior: 'smooth' });
