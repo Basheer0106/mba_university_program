@@ -388,8 +388,7 @@
         (data.course ? '<li><span class="tc-label">Course</span><b>' + esc(data.course) + '</b></li>' : '') +
         '<li><span class="tc-label">We will call you on</span><b>+91 ' + esc(data.phone) + '</b></li>' +
       '</ul>' +
-      '<button type="button" class="thanks-next" data-jump="thanks-links"><span>Choose your university, get the prospectus and proceed for admission through the university links.</span>' +
-        '<i aria-hidden="true">&darr;</i></button></div>' +
+      '<button type="button" class="thanks-next" data-jump="thanks-links"><span>Choose your university, get the prospectus and proceed for admission through the university links.</span></button></div>' +
       '<section class="thanks-links" id="thanks-links"><h3>University prospectus &amp; admission links</h3>' +
       '<p>Open the official Online MBA programme / admission page of each university.</p>' + linksGridHtml() + '</section>'
     );
